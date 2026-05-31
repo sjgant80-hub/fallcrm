@@ -1,0 +1,1293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>fallcrm · sovereign single-file CRM · delete HubSpot</title>
+<meta name="description" content="The delete-HubSpot wedge. Sovereign single-file CRM. Contacts, deals, pipeline, kanban. IndexedDB. Vanilla. Works from file://. Prime 373.">
+<meta name="theme-color" content="#0b0a0f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&family=Libre+Baskerville:ital@0;1&display=swap" rel="stylesheet">
+<link rel="manifest" href='data:application/manifest+json,{"name":"fallcrm","short_name":"fallcrm","start_url":"./","display":"standalone","background_color":"%230b0a0f","theme_color":"%230b0a0f","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 fill=%22%230b0a0f%22/><text x=%2232%22 y=%2244%22 font-size=%2240%22 text-anchor=%22middle%22 fill=%22%23d4a853%22 font-family=%22serif%22>%E2%97%8A</text></svg>","sizes":"192x192","type":"image/svg+xml"}]}'>
+<style>
+  :root {
+    --ox: #8b1a1a;
+    --brass: #b8974a;
+    --gold: #d4a853;
+    --cream: #c4bfb2;
+    --void: #0b0a0f;
+    --surface: #14131a;
+    --surface2: #1c1a23;
+    --border: #2a2730;
+    --muted: #6f6b78;
+    --lead: #6f6b78;
+    --qualified: #c87e3a;
+    --demo: #b8974a;
+    --proposal: #d4a853;
+    --negotiation: #b8974a;
+    --won: #4a8a4a;
+    --lost: #c8371a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--void); color: var(--cream); font-family: 'DM Sans', system-ui, sans-serif; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+  body { background-image: radial-gradient(at 15% 0%, rgba(139,26,26,0.08) 0%, transparent 40%), radial-gradient(at 85% 100%, rgba(184,151,74,0.05) 0%, transparent 35%); }
+  header { padding: 20px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  header .brand { display: flex; align-items: baseline; gap: 14px; }
+  header h1 { font-family: 'Libre Baskerville', serif; font-size: 22px; margin: 0; letter-spacing: 0.02em; }
+  header h1 em { color: var(--gold); font-style: normal; }
+  header .tag { font-family: 'DM Mono'; font-size: 10.5px; color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase; }
+  header .nav { display: flex; gap: 4px; flex-wrap: wrap; }
+  header .nav button {
+    background: transparent; border: 1px solid var(--border); color: var(--cream);
+    padding: 8px 14px; font-family: 'Syne'; font-weight: 700; font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  }
+  header .nav button.active { border-color: var(--gold); color: var(--gold); background: rgba(212,168,83,0.06); }
+  header .nav button:hover { border-color: var(--gold); color: var(--gold); }
+  main { max-width: 1400px; margin: 0 auto; padding: 24px 28px 80px; }
+  .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+  .toolbar input[type=search], .toolbar select {
+    background: var(--surface); border: 1px solid var(--border); color: var(--cream);
+    padding: 9px 12px; font-family: 'DM Mono'; font-size: 12.5px;
+  }
+  .toolbar input[type=search] { width: 280px; max-width: 100%; }
+  .toolbar input:focus, .toolbar select:focus { outline: 1px solid var(--gold); outline-offset: -1px; }
+  .toolbar .grow { flex: 1; }
+  .toolbar .view-toggle { display: inline-flex; border: 1px solid var(--border); }
+  .toolbar .view-toggle button { background: transparent; border: none; color: var(--cream); padding: 8px 14px; font-family: 'DM Mono'; font-size: 11px; cursor: pointer; border-right: 1px solid var(--border); }
+  .toolbar .view-toggle button:last-child { border-right: none; }
+  .toolbar .view-toggle button.active { background: var(--gold); color: var(--void); }
+  .btn {
+    background: var(--ox); color: var(--cream); border: none; padding: 9px 16px;
+    font-family: 'Syne'; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    font-size: 11px; cursor: pointer; transition: background 0.15s;
+  }
+  .btn:hover { background: var(--gold); color: var(--void); }
+  .btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--cream); }
+  .btn.ghost:hover { border-color: var(--gold); color: var(--gold); background: transparent; }
+  .btn.gold { background: var(--gold); color: var(--void); }
+  .btn.gold:hover { background: var(--brass); color: var(--void); }
+  .btn.sm { padding: 6px 10px; font-size: 10px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* CONTACTS */
+  table.contacts { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); }
+  table.contacts th, table.contacts td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  table.contacts th { font-family: 'DM Mono'; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 500; background: var(--surface2); }
+  table.contacts tr:hover td { background: var(--surface2); cursor: pointer; }
+  table.contacts td.role { color: var(--muted); }
+  .tagchip { display: inline-block; background: var(--surface2); border: 1px solid var(--border); padding: 2px 7px; font-family: 'DM Mono'; font-size: 10px; color: var(--brass); margin-right: 4px; letter-spacing: 0.04em; }
+
+  /* KANBAN */
+  .kanban { display: grid; grid-template-columns: repeat(7, minmax(180px, 1fr)); gap: 12px; overflow-x: auto; }
+  .kcol { background: var(--surface); border: 1px solid var(--border); padding: 12px; min-height: 400px; min-width: 180px; }
+  .kcol h3 { margin: 0 0 12px; font-family: 'Syne'; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; padding-bottom: 8px; border-bottom: 2px solid; display: flex; justify-content: space-between; align-items: center; }
+  .kcol .count { font-family: 'DM Mono'; font-size: 10px; color: var(--muted); }
+  .kcol[data-stage=Lead] h3        { border-color: var(--lead);        color: var(--lead); }
+  .kcol[data-stage=Qualified] h3   { border-color: var(--qualified);   color: var(--qualified); }
+  .kcol[data-stage=Demo] h3        { border-color: var(--demo);        color: var(--demo); }
+  .kcol[data-stage=Proposal] h3    { border-color: var(--proposal);    color: var(--proposal); }
+  .kcol[data-stage=Negotiation] h3 { border-color: var(--negotiation); color: var(--negotiation); }
+  .kcol[data-stage="Closed-Won"] h3 { border-color: var(--won);        color: var(--won); }
+  .kcol[data-stage="Closed-Lost"] h3 { border-color: var(--lost);      color: var(--lost); }
+  .kcol.drop-target { background: rgba(212,168,83,0.08); }
+  .dcard { background: var(--surface2); border: 1px solid var(--border); padding: 10px; margin-bottom: 8px; cursor: grab; }
+  .dcard:active { cursor: grabbing; }
+  .dcard.dragging { opacity: 0.4; }
+  .dcard h4 { margin: 0 0 4px; font-family: 'Libre Baskerville', serif; font-size: 13px; color: var(--cream); }
+  .dcard .val { font-family: 'DM Mono'; font-size: 13px; color: var(--gold); font-weight: 500; }
+  .dcard .who { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .dcard .close { font-family: 'DM Mono'; font-size: 10px; color: var(--brass); margin-top: 4px; }
+
+  /* DEAL LIST */
+  table.deals { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); }
+  table.deals th, table.deals td { padding: 9px 12px; border-bottom: 1px solid var(--border); font-size: 12.5px; text-align: left; }
+  table.deals th { font-family: 'DM Mono'; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); background: var(--surface2); font-weight: 500; }
+  table.deals tr:hover td { background: var(--surface2); cursor: pointer; }
+  .stagebadge { display: inline-block; padding: 2px 8px; font-family: 'DM Mono'; font-size: 10px; letter-spacing: 0.04em; color: var(--void); font-weight: 500; }
+  .stagebadge[data-stage=Lead]        { background: var(--lead); color: var(--cream); }
+  .stagebadge[data-stage=Qualified]   { background: var(--qualified); }
+  .stagebadge[data-stage=Demo]        { background: var(--demo); }
+  .stagebadge[data-stage=Proposal]    { background: var(--proposal); }
+  .stagebadge[data-stage=Negotiation] { background: var(--negotiation); }
+  .stagebadge[data-stage="Closed-Won"]  { background: var(--won); color: white; }
+  .stagebadge[data-stage="Closed-Lost"] { background: var(--lost); color: white; }
+
+  /* ANALYTICS */
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .metric { background: var(--surface); border: 1px solid var(--border); padding: 18px; }
+  .metric .label { font-family: 'DM Mono'; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .metric .val { font-family: 'Libre Baskerville', serif; font-size: 26px; color: var(--gold); }
+  .metric .sub { font-family: 'DM Mono'; font-size: 11px; color: var(--cream); margin-top: 6px; }
+  .funnel { background: var(--surface); border: 1px solid var(--border); padding: 18px; }
+  .funnel h3 { font-family: 'Libre Baskerville', serif; font-size: 16px; margin: 0 0 14px; color: var(--cream); border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  .frow { display: grid; grid-template-columns: 130px 1fr 80px 80px; gap: 12px; align-items: center; padding: 7px 0; font-family: 'DM Mono'; font-size: 12px; border-bottom: 1px solid var(--border); }
+  .frow:last-child { border-bottom: none; }
+  .fbar { background: var(--surface2); height: 14px; position: relative; }
+  .fbar .fill { height: 100%; transition: width 0.3s; }
+  .fbar .fill[data-stage=Lead]        { background: var(--lead); }
+  .fbar .fill[data-stage=Qualified]   { background: var(--qualified); }
+  .fbar .fill[data-stage=Demo]        { background: var(--demo); }
+  .fbar .fill[data-stage=Proposal]    { background: var(--proposal); }
+  .fbar .fill[data-stage=Negotiation] { background: var(--negotiation); }
+  .fbar .fill[data-stage="Closed-Won"]  { background: var(--won); }
+  .fbar .fill[data-stage="Closed-Lost"] { background: var(--lost); }
+  .fcount { text-align: right; color: var(--muted); }
+  .fval { text-align: right; color: var(--gold); }
+
+  /* MODAL */
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 50; padding: 20px; }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--gold); width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; }
+  .modal header { border-bottom: 1px solid var(--border); padding: 16px 22px; }
+  .modal header h2 { margin: 0; font-family: 'Libre Baskerville', serif; font-size: 18px; color: var(--gold); }
+  .modal .body { padding: 20px 22px; }
+  .modal .actions { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .field { margin-bottom: 13px; }
+  .field label { font-family: 'DM Mono'; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 5px; }
+  .field input, .field textarea, .field select {
+    width: 100%; background: var(--void); border: 1px solid var(--border); color: var(--cream);
+    padding: 9px 11px; font-family: 'DM Mono'; font-size: 13px;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { outline: 1px solid var(--gold); outline-offset: -1px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 540px) { .row2 { grid-template-columns: 1fr; } }
+  .activity-log { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 14px; }
+  .activity-log h3 { font-family: 'Libre Baskerville', serif; font-size: 14px; margin: 0 0 10px; color: var(--cream); }
+  .activity-item { padding: 8px 0; border-bottom: 1px solid var(--border); font-family: 'DM Mono'; font-size: 12px; }
+  .activity-item .ts { color: var(--muted); font-size: 10.5px; }
+  .activity-item .kind { display: inline-block; color: var(--brass); margin-right: 6px; font-weight: 500; }
+  .activity-add { display: grid; grid-template-columns: 120px 1fr auto; gap: 6px; margin-top: 10px; }
+  .activity-add input, .activity-add select { background: var(--void); border: 1px solid var(--border); color: var(--cream); padding: 7px 9px; font-family: 'DM Mono'; font-size: 12px; }
+
+  /* SETTINGS */
+  .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 800px) { .settings-grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--surface); border: 1px solid var(--border); padding: 20px; }
+  .panel h2 { font-family: 'Libre Baskerville', serif; font-size: 16px; margin: 0 0 14px; border-bottom: 1px solid var(--border); padding-bottom: 8px; color: var(--cream); }
+  .panel p { font-size: 13px; line-height: 1.6; color: var(--cream); }
+  .panel .savings { font-family: 'Libre Baskerville', serif; font-size: 36px; color: var(--gold); margin: 14px 0 4px; }
+  .panel .savings-sub { font-family: 'DM Mono'; font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+  .comparison { font-family: 'DM Mono'; font-size: 12px; margin-top: 14px; line-height: 2; }
+  .comparison .line { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); }
+  .comparison .ko { color: #ff8a7a; text-decoration: line-through; }
+  .comparison .ok { color: var(--won); }
+  .quotacard { display: flex; gap: 14px; font-family: 'DM Mono'; font-size: 12px; }
+  .quotacard div { flex: 1; background: var(--surface2); padding: 12px; border: 1px solid var(--border); }
+  .quotacard .qnum { font-family: 'Libre Baskerville', serif; font-size: 20px; color: var(--gold); }
+  .quotacard .qlabel { font-size: 10px; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
+
+  /* EMPTY */
+  .empty-state { text-align: center; padding: 60px 20px; }
+  .empty-state .glyph { font-family: 'Libre Baskerville', serif; font-size: 48px; color: var(--gold); margin-bottom: 12px; }
+  .empty-state p { color: var(--muted); margin-bottom: 18px; }
+
+  /* WATERMARK */
+  .watermark { position: fixed; bottom: 12px; right: 14px; font-family: 'DM Mono'; font-size: 10px; color: var(--muted); letter-spacing: 0.1em; pointer-events: none; z-index: 5; }
+  .watermark.paid { display: none; }
+
+  footer { padding: 22px 28px; border-top: 1px solid var(--border); font-family: 'DM Mono'; font-size: 11px; color: var(--muted); text-align: center; letter-spacing: 0.08em; }
+  footer a { color: var(--brass); text-decoration: none; }
+  footer a:hover { color: var(--gold); }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--gold); color: var(--gold); padding: 12px 22px; font-family: 'DM Mono'; font-size: 12px; z-index: 100; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+
+  .pill { display: inline-block; padding: 2px 8px; font-family: 'DM Mono'; font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; background: var(--ox); color: var(--cream); margin-left: 6px; }
+  .pill.gold { background: var(--gold); color: var(--void); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>◊ <em>fallcrm</em></h1>
+    <span class="tag">sovereign · single file · prime 373 · v1.0</span>
+  </div>
+  <nav class="nav">
+    <button data-view="contacts" class="active">Contacts</button>
+    <button data-view="pipeline">Pipeline</button>
+    <button data-view="analytics">Analytics</button>
+    <button data-view="email">Email Helper</button>
+    <button data-view="settings">Settings</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- CONTACTS -->
+<section class="view active" id="view-contacts">
+  <div class="toolbar">
+    <input type="search" id="cSearch" placeholder="Search contacts · name · company · email · tag">
+    <select id="cTagFilter"><option value="">All tags</option></select>
+    <span class="grow"></span>
+    <button class="btn ghost sm" id="importBtn">Import CSV / vCard</button>
+    <button class="btn ghost sm" id="exportContactsBtn">Export</button>
+    <button class="btn gold" id="addContactBtn">+ Contact</button>
+  </div>
+  <table class="contacts">
+    <thead><tr>
+      <th>Name</th><th>Company</th><th>Role</th><th>Email</th><th>Phone</th><th>Tags</th><th>Last contact</th>
+    </tr></thead>
+    <tbody id="contactRows"></tbody>
+  </table>
+  <div id="contactEmpty" class="empty-state" style="display:none">
+    <div class="glyph">◊</div>
+    <p>No contacts. Add one or import from CSV / vCard.</p>
+    <button class="btn gold" onclick="openContactModal()">+ Add first contact</button>
+  </div>
+</section>
+
+<!-- PIPELINE -->
+<section class="view" id="view-pipeline">
+  <div class="toolbar">
+    <div class="view-toggle">
+      <button class="active" data-pview="kanban">Kanban</button>
+      <button data-pview="list">List</button>
+    </div>
+    <input type="search" id="dSearch" placeholder="Search deals">
+    <span class="grow"></span>
+    <button class="btn ghost sm" id="exportDealsBtn">Export deals</button>
+    <button class="btn gold" id="addDealBtn">+ Deal</button>
+  </div>
+  <div class="kanban" id="kanban"></div>
+  <table class="deals" id="dealTable" style="display:none">
+    <thead><tr><th>Title</th><th>Contact</th><th>Stage</th><th>Value</th><th>Expected close</th><th>Updated</th></tr></thead>
+    <tbody id="dealRows"></tbody>
+  </table>
+</section>
+
+<!-- ANALYTICS -->
+<section class="view" id="view-analytics">
+  <div class="metrics" id="metrics"></div>
+  <div class="funnel">
+    <h3>Pipeline funnel · stage conversion · weighted forecast</h3>
+    <div id="funnelRows"></div>
+  </div>
+</section>
+
+<!-- EMAIL HELPER -->
+<section class="view" id="view-email">
+  <div class="settings-grid">
+    <div class="panel">
+      <h2>Compose · context-aware draft</h2>
+      <div class="field">
+        <label>Template</label>
+        <select id="eTemplate">
+          <option value="intro">Cold intro</option>
+          <option value="followup">Follow-up after demo</option>
+          <option value="proposal">Proposal cover</option>
+          <option value="loss-reason">Ask for loss reason</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Linked deal (optional)</label>
+        <select id="eDeal"><option value="">— none —</option></select>
+      </div>
+      <div class="field">
+        <label>Contact name</label>
+        <input type="text" id="eName" placeholder="e.g. Alex Morgan">
+      </div>
+      <div class="field">
+        <label>Company</label>
+        <input type="text" id="eCompany" placeholder="e.g. Northwind Ltd">
+      </div>
+      <div class="field">
+        <label>Custom context (one line)</label>
+        <input type="text" id="eContext" placeholder="e.g. saw your Q4 hiring post">
+      </div>
+      <button class="btn gold" id="eGenerate">Generate draft ▸</button>
+    </div>
+    <div class="panel">
+      <h2>Output</h2>
+      <div class="field">
+        <label>Subject</label>
+        <input type="text" id="eSubject" readonly>
+      </div>
+      <div class="field">
+        <label>Body</label>
+        <textarea id="eBody" rows="14" readonly style="font-family:'DM Mono';font-size:12px;line-height:1.7"></textarea>
+      </div>
+      <button class="btn" id="eCopy">Copy to clipboard</button>
+      <button class="btn ghost" id="eMailto">Open in mail app</button>
+    </div>
+  </div>
+</section>
+
+<!-- SETTINGS -->
+<section class="view" id="view-settings">
+  <div class="settings-grid">
+    <div class="panel">
+      <h2>The replacement counter</h2>
+      <p>This is what you saved by using fallcrm instead of HubSpot Pro · Salesforce Sales Cloud · Pipedrive Advanced.</p>
+      <div class="savings" id="savings">$0</div>
+      <div class="savings-sub" id="savingsSub">since you started · single seat</div>
+      <div class="comparison">
+        <div class="line"><span class="ko">HubSpot Pro</span><span>$450/mo</span></div>
+        <div class="line"><span class="ko">Salesforce Sales Cloud Pro</span><span>$165/mo</span></div>
+        <div class="line"><span class="ko">Pipedrive Advanced</span><span>$49/mo</span></div>
+        <div class="line"><span class="ok">fallcrm · sovereign tier</span><span class="ok">$0/mo</span></div>
+      </div>
+      <p style="margin-top:18px;font-size:11px;color:var(--muted)">Set your start date to compute properly. Or rely on the first-contact date as anchor.</p>
+      <div class="field" style="margin-top:8px"><label>Anchor date</label><input type="date" id="anchorDate"></div>
+    </div>
+    <div class="panel">
+      <h2>Quota · sovereign tier</h2>
+      <div class="quotacard">
+        <div>
+          <div class="qlabel">Contacts</div>
+          <div class="qnum"><span id="qContacts">0</span> <span style="color:var(--muted);font-size:14px">/ <span id="qContactsMax">50</span></span></div>
+        </div>
+        <div>
+          <div class="qlabel">Deals</div>
+          <div class="qnum"><span id="qDeals">0</span> <span style="color:var(--muted);font-size:14px">/ <span id="qDealsMax">20</span></span></div>
+        </div>
+      </div>
+      <p style="margin-top:14px">Free cap · 50 contacts · 20 deals · single user · subtle watermark. Lift the cap with a Konomi paid licence.</p>
+      <div class="field" style="margin-top:10px"><label>Konomi licence key</label><input type="text" id="kLicence" placeholder="kn-xxxx-xxxx-xxxx (paste to activate)"></div>
+      <button class="btn" id="kActivate">Activate</button>
+      <button class="btn ghost" id="kClear">Clear</button>
+      <p id="kStatus" style="margin-top:10px;font-family:'DM Mono';font-size:11.5px;color:var(--brass)"></p>
+    </div>
+    <div class="panel">
+      <h2>Data · export / import / wipe</h2>
+      <p>All data lives in your browser's IndexedDB. Nothing leaves this device unless you export it.</p>
+      <button class="btn ghost" id="exportAllBtn">Export full JSON</button>
+      <button class="btn ghost" id="importAllBtn">Import JSON</button>
+      <button class="btn ghost" id="wipeBtn" style="border-color:var(--ox);color:#ff8a7a">Wipe all data</button>
+      <p style="margin-top:14px;font-size:11px;color:var(--muted)">Tip · pair fallcrm with <a style="color:var(--brass)" href="https://sjgant80-hub.github.io/fall-vetter/">fall-vetter</a> to dedupe imports before they land.</p>
+    </div>
+    <div class="panel">
+      <h2>fallmesh · prime 373</h2>
+      <p>fallcrm emits to <code style="color:var(--brass)">fall-signal</code> on the BroadcastChannel · other estate tools can listen for <code style="color:var(--brass)">deal_won</code> · <code style="color:var(--brass)">deal_lost</code> · <code style="color:var(--brass)">contact_added</code> events.</p>
+      <p style="font-family:'DM Mono';font-size:11px;color:var(--muted);margin-top:8px">Toggle below to disable broadcast (private mode).</p>
+      <label style="font-family:'DM Mono';font-size:12px;display:flex;align-items:center;gap:8px;margin-top:8px">
+        <input type="checkbox" id="meshToggle" checked> emit fall-signal events
+      </label>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- CONTACT MODAL -->
+<div class="modal-backdrop" id="contactModal">
+  <div class="modal">
+    <header><h2 id="cModalTitle">New contact</h2></header>
+    <div class="body">
+      <div class="row2">
+        <div class="field"><label>Name *</label><input type="text" id="cmName"></div>
+        <div class="field"><label>Company</label><input type="text" id="cmCompany"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Role</label><input type="text" id="cmRole"></div>
+        <div class="field"><label>Email</label><input type="email" id="cmEmail"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Phone</label><input type="tel" id="cmPhone"></div>
+        <div class="field"><label>LinkedIn URL</label><input type="url" id="cmLinkedIn" placeholder="https://linkedin.com/in/..."></div>
+      </div>
+      <div class="field"><label>Tags (comma separated)</label><input type="text" id="cmTags" placeholder="warm, decision-maker, fintech"></div>
+      <div class="field"><label>Last contact date</label><input type="date" id="cmLastContact"></div>
+      <div class="field"><label>Notes</label><textarea id="cmNotes" rows="3"></textarea></div>
+      <div class="activity-log" id="cmActivityLog" style="display:none">
+        <h3>Activity</h3>
+        <div id="cmActivities"></div>
+        <div class="activity-add">
+          <select id="cmActKind">
+            <option value="call">call</option>
+            <option value="meeting">meeting</option>
+            <option value="email">email</option>
+            <option value="note">note</option>
+          </select>
+          <input type="text" id="cmActNote" placeholder="What happened?">
+          <button class="btn sm" id="cmActAdd">+ log</button>
+        </div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="cmDelete" style="border-color:var(--ox);color:#ff8a7a;display:none">Delete</button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn ghost" id="cmCancel">Cancel</button>
+        <button class="btn gold" id="cmSave">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DEAL MODAL -->
+<div class="modal-backdrop" id="dealModal">
+  <div class="modal">
+    <header><h2 id="dModalTitle">New deal</h2></header>
+    <div class="body">
+      <div class="field"><label>Title *</label><input type="text" id="dmTitle"></div>
+      <div class="row2">
+        <div class="field"><label>Contact</label><select id="dmContact"></select></div>
+        <div class="field"><label>Stage</label><select id="dmStage">
+          <option>Lead</option><option>Qualified</option><option>Demo</option>
+          <option>Proposal</option><option>Negotiation</option>
+          <option>Closed-Won</option><option>Closed-Lost</option>
+        </select></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Value (£)</label><input type="number" id="dmValue" min="0" step="100"></div>
+        <div class="field"><label>Expected close</label><input type="date" id="dmClose"></div>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="dmNotes" rows="4"></textarea></div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="dmDelete" style="border-color:var(--ox);color:#ff8a7a;display:none">Delete</button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn ghost" id="dmCancel">Cancel</button>
+        <button class="btn gold" id="dmSave">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" style="display:none" accept=".csv,.vcf,.json">
+
+<footer>
+  ◊ fallcrm · prime 373 · MIT · sovereign single-file CRM · the delete-HubSpot wedge · part of the AIN estate · <a href="https://github.com/sjgant80-hub/fallcrm">source</a>
+</footer>
+
+<div class="watermark" id="watermark">◊ fallcrm sovereign tier</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+ * fallcrm v1.0 · sovereign single-file CRM
+ * prime 373 · MIT · Simon Gant
+ * IndexedDB primary, localStorage fallback
+ * Vanilla JS · no build step · works from file://
+ * ========================================================= */
+
+const FREE_CAPS = { contacts: 50, deals: 20 };
+const STAGES = ['Lead','Qualified','Demo','Proposal','Negotiation','Closed-Won','Closed-Lost'];
+const STAGE_PROB = { Lead:0.10, Qualified:0.25, Demo:0.40, Proposal:0.60, Negotiation:0.80, 'Closed-Won':1.0, 'Closed-Lost':0.0 };
+const REPLACE_RATE = 450; /* USD per month replaced (HubSpot Pro single seat) */
+
+/* ---------- STORAGE: IndexedDB w/ localStorage fallback ---------- */
+const DB = (function(){
+  const NAME = 'fallcrm', VERSION = 1;
+  let db = null, ready = null;
+  const lsKey = k => 'fallcrm:' + k;
+  const usingLS = () => !window.indexedDB;
+
+  function open() {
+    if (usingLS()) return Promise.resolve(null);
+    if (ready) return ready;
+    ready = new Promise((res, rej) => {
+      const req = indexedDB.open(NAME, VERSION);
+      req.onupgradeneeded = e => {
+        const d = e.target.result;
+        ['contacts','deals','activities','settings'].forEach(s => {
+          if (!d.objectStoreNames.contains(s)) d.createObjectStore(s, { keyPath: 'id' });
+        });
+      };
+      req.onsuccess = e => { db = e.target.result; res(db); };
+      req.onerror = e => rej(e.target.error);
+    });
+    return ready;
+  }
+  async function all(store) {
+    if (usingLS()) return JSON.parse(localStorage.getItem(lsKey(store)) || '[]');
+    await open();
+    return new Promise((res, rej) => {
+      const tx = db.transaction(store, 'readonly');
+      const req = tx.objectStore(store).getAll();
+      req.onsuccess = () => res(req.result || []);
+      req.onerror = () => rej(req.error);
+    });
+  }
+  async function put(store, obj) {
+    if (usingLS()) {
+      const arr = JSON.parse(localStorage.getItem(lsKey(store)) || '[]');
+      const i = arr.findIndex(x => x.id === obj.id);
+      if (i >= 0) arr[i] = obj; else arr.push(obj);
+      localStorage.setItem(lsKey(store), JSON.stringify(arr));
+      return obj;
+    }
+    await open();
+    return new Promise((res, rej) => {
+      const tx = db.transaction(store, 'readwrite');
+      tx.objectStore(store).put(obj);
+      tx.oncomplete = () => res(obj);
+      tx.onerror = () => rej(tx.error);
+    });
+  }
+  async function del(store, id) {
+    if (usingLS()) {
+      const arr = JSON.parse(localStorage.getItem(lsKey(store)) || '[]').filter(x => x.id !== id);
+      localStorage.setItem(lsKey(store), JSON.stringify(arr));
+      return;
+    }
+    await open();
+    return new Promise((res, rej) => {
+      const tx = db.transaction(store, 'readwrite');
+      tx.objectStore(store).delete(id);
+      tx.oncomplete = () => res();
+      tx.onerror = () => rej(tx.error);
+    });
+  }
+  async function clearAll() {
+    if (usingLS()) {
+      ['contacts','deals','activities','settings'].forEach(s => localStorage.removeItem(lsKey(s)));
+      return;
+    }
+    await open();
+    return new Promise((res, rej) => {
+      const tx = db.transaction(['contacts','deals','activities','settings'], 'readwrite');
+      ['contacts','deals','activities','settings'].forEach(s => tx.objectStore(s).clear());
+      tx.oncomplete = () => res();
+      tx.onerror = () => rej(tx.error);
+    });
+  }
+  return { all, put, del, clearAll, open };
+})();
+
+/* ---------- KONOMI LICENCE SHIM (minimal) ---------- */
+const Konomi = (function(){
+  const KEY = 'fallcrm:konomi';
+  function status() {
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (!s) return { tier: 'sovereign', valid: true, message: 'sovereign tier · single user · free cap active' };
+      const exp = s.exp ? new Date(s.exp) : null;
+      if (exp && exp < new Date()) return { tier: 'sovereign', valid: false, message: 'paid licence expired · reverted to sovereign tier' };
+      return { tier: s.tier || 'paid', valid: true, exp: exp ? exp.toISOString().slice(0,10) : null, message: `${(s.tier||'paid').toUpperCase()} licence active${exp ? ' until ' + exp.toISOString().slice(0,10) : ' · perpetual'}` };
+    } catch(e) { return { tier:'sovereign', valid:true, message: 'sovereign tier' }; }
+  }
+  function activate(key) {
+    /* Format: kn-<tier>-<expYYYYMMDD>-<sig8> · sig is an XOR placeholder.
+       Real validation happens server-side when the user actually buys.
+       Here we accept any key starting with kn- and length >= 14, parse tier+exp. */
+    if (!/^kn-/.test(key) || key.length < 14) return { ok:false, message:'invalid key format · expected kn-...' };
+    const parts = key.split('-');
+    const tier = parts[1] || 'paid';
+    const expRaw = parts[2] || '';
+    let exp = null;
+    if (/^\d{8}$/.test(expRaw)) exp = `${expRaw.slice(0,4)}-${expRaw.slice(4,6)}-${expRaw.slice(6,8)}`;
+    localStorage.setItem(KEY, JSON.stringify({ tier, exp, activatedAt: new Date().toISOString() }));
+    return { ok:true, tier, exp };
+  }
+  function clear() { localStorage.removeItem(KEY); }
+  return { status, activate, clear };
+})();
+
+/* ---------- FALLMESH (BroadcastChannel) ---------- */
+const Mesh = (function(){
+  let chan = null, enabled = true;
+  try { chan = new BroadcastChannel('fall-signal'); } catch(e) {}
+  function emit(kind, payload) {
+    if (!enabled || !chan) return;
+    try {
+      chan.postMessage({ source: 'fallcrm', prime: 373, kind, payload, at: new Date().toISOString() });
+    } catch(e) {}
+  }
+  function setEnabled(b) { enabled = !!b; }
+  return { emit, setEnabled };
+})();
+
+/* ---------- STATE ---------- */
+let state = { contacts: [], deals: [], activities: [], settings: {} };
+let ui = { view: 'contacts', pview: 'kanban', searchC: '', searchD: '', tagFilter: '', editingContact: null, editingDeal: null };
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+
+async function loadAll() {
+  state.contacts   = await DB.all('contacts');
+  state.deals      = await DB.all('deals');
+  state.activities = await DB.all('activities');
+  const s = await DB.all('settings');
+  state.settings = s.length ? s[0] : { id:'main', anchorDate:null, meshEnabled:true };
+  if (state.contacts.length === 0 && state.deals.length === 0) seedExamples();
+}
+
+async function saveContact(c) { await DB.put('contacts', c); }
+async function saveDeal(d)    { await DB.put('deals', d); }
+async function saveActivity(a){ await DB.put('activities', a); }
+async function saveSettings() { await DB.put('settings', state.settings); }
+
+/* ---------- SEED ---------- */
+function seedExamples() {
+  const today = new Date();
+  const iso = (d) => d.toISOString().slice(0,10);
+  const back = (n) => { const d = new Date(today); d.setDate(d.getDate()-n); return iso(d); };
+  const fwd  = (n) => { const d = new Date(today); d.setDate(d.getDate()+n); return iso(d); };
+
+  const contacts = [
+    { id: uid(), name:'Alex Morgan',  company:'Northwind Logistics', role:'Head of Ops',     email:'alex@northwind.example',  linkedin:'https://linkedin.com/in/alexmorgan', phone:'+44 20 7946 0001', tags:['warm','logistics'], lastContact: back(3),  notes:'Saw our case study via LinkedIn. Asked about onboarding time.' },
+    { id: uid(), name:'Priya Shah',    company:'Halcyon Health',     role:'COO',             email:'priya@halcyon.example',   linkedin:'https://linkedin.com/in/priyashah',  phone:'+44 161 555 0188', tags:['decision-maker','health'], lastContact: back(1), notes:'Demo went well. Looping in CFO next.' },
+    { id: uid(), name:'Marcus Osei',  company:'Sable & Steele',     role:'Managing Partner', email:'marcus@sablesteele.example', linkedin:'https://linkedin.com/in/marcusosei', phone:'+44 7700 900123', tags:['legal','warm'], lastContact: back(7),  notes:'Wants quote · 12 seats · GDPR sensitive.' },
+    { id: uid(), name:'Yuki Tanaka',   company:'Kintsugi Studios',   role:'Founder',         email:'yuki@kintsugi.example',   linkedin:'https://linkedin.com/in/yukitanaka',  phone:'+44 7700 900456', tags:['creative','warm'], lastContact: back(14), notes:'Replied to cold intro. Slow inbound. Patient deal.' },
+    { id: uid(), name:'Eleanor Voss',  company:'Voss Capital',       role:'Partner',         email:'eleanor@vosscap.example', linkedin:'https://linkedin.com/in/eleanorvoss', phone:'+44 7700 900789', tags:['vc','referrer'], lastContact: back(2),  notes:'Not a buyer · sends referrals. Treat as a node.' },
+  ];
+  const deals = [
+    { id: uid(), title:'Northwind · pilot 25-seat',  contactId: contacts[0].id, stage:'Demo',        value:18000, expectedClose: fwd(21), notes:'Pilot scoped. Procurement in 2 weeks.', updatedAt: iso(today) },
+    { id: uid(), title:'Halcyon · 80 seats Q3',      contactId: contacts[1].id, stage:'Proposal',    value:54000, expectedClose: fwd(14), notes:'Proposal sent. CFO meeting Tue.',     updatedAt: iso(today) },
+    { id: uid(), title:'Sable & Steele · 12 seats',  contactId: contacts[2].id, stage:'Negotiation', value:14400, expectedClose: fwd(7),  notes:'Pushing back on GDPR clauses. Legal next.', updatedAt: iso(today) },
+  ];
+  const activities = [
+    { id: uid(), contactId: contacts[1].id, kind:'meeting', note:'Discovery call · 45m · pains: legacy Salesforce', at: back(5) },
+    { id: uid(), contactId: contacts[1].id, kind:'email',   note:'Sent recap and pricing matrix',                    at: back(2) },
+    { id: uid(), contactId: contacts[2].id, kind:'call',    note:'15m budget gate confirmed',                        at: back(4) },
+  ];
+  contacts.forEach(c => DB.put('contacts', c));
+  deals.forEach(d => DB.put('deals', d));
+  activities.forEach(a => DB.put('activities', a));
+  state.contacts = contacts;
+  state.deals = deals;
+  state.activities = activities;
+}
+
+/* ---------- ROUTING ---------- */
+function switchView(name) {
+  ui.view = name;
+  document.querySelectorAll('header .nav button').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
+  if (name === 'contacts') renderContacts();
+  if (name === 'pipeline') renderPipeline();
+  if (name === 'analytics') renderAnalytics();
+  if (name === 'email') renderEmail();
+  if (name === 'settings') renderSettings();
+}
+document.querySelectorAll('header .nav button').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
+
+/* ---------- CONTACTS RENDER ---------- */
+function uniqueTags() {
+  const s = new Set();
+  state.contacts.forEach(c => (c.tags || []).forEach(t => s.add(t)));
+  return [...s].sort();
+}
+function renderContacts() {
+  const tbody = document.getElementById('contactRows');
+  const sel = document.getElementById('cTagFilter');
+  const existing = sel.value;
+  sel.innerHTML = '<option value="">All tags</option>' + uniqueTags().map(t => `<option ${t===existing?'selected':''}>${esc(t)}</option>`).join('');
+
+  const q = ui.searchC.toLowerCase().trim();
+  const tag = ui.tagFilter;
+  const rows = state.contacts.filter(c => {
+    if (tag && !(c.tags||[]).includes(tag)) return false;
+    if (!q) return true;
+    return JSON.stringify(c).toLowerCase().includes(q);
+  });
+  rows.sort((a,b) => (b.lastContact || '').localeCompare(a.lastContact || ''));
+
+  tbody.innerHTML = rows.map(c => `
+    <tr data-id="${c.id}">
+      <td><strong>${esc(c.name)}</strong></td>
+      <td>${esc(c.company || '')}</td>
+      <td class="role">${esc(c.role || '')}</td>
+      <td>${c.email ? `<a style="color:var(--brass);text-decoration:none" href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : ''}</td>
+      <td>${esc(c.phone || '')}</td>
+      <td>${(c.tags||[]).map(t => `<span class="tagchip">${esc(t)}</span>`).join('')}</td>
+      <td style="color:var(--muted);font-family:'DM Mono';font-size:11.5px">${esc(c.lastContact || '—')}</td>
+    </tr>`).join('');
+
+  tbody.querySelectorAll('tr').forEach(tr => tr.addEventListener('click', () => openContactModal(tr.dataset.id)));
+  document.getElementById('contactEmpty').style.display = rows.length === 0 ? 'block' : 'none';
+  document.querySelector('table.contacts').style.display = rows.length === 0 ? 'none' : '';
+  updateQuotaDisplay();
+}
+
+/* ---------- PIPELINE RENDER ---------- */
+function renderPipeline() {
+  const useKanban = ui.pview === 'kanban';
+  document.getElementById('kanban').style.display = useKanban ? '' : 'none';
+  document.getElementById('dealTable').style.display = useKanban ? 'none' : '';
+  if (useKanban) renderKanban(); else renderDealList();
+}
+function renderKanban() {
+  const root = document.getElementById('kanban');
+  const q = ui.searchD.toLowerCase().trim();
+  root.innerHTML = STAGES.map(stage => {
+    const deals = state.deals.filter(d => d.stage === stage && (!q || JSON.stringify(d).toLowerCase().includes(q)));
+    const total = deals.reduce((s,d) => s + (Number(d.value)||0), 0);
+    return `<div class="kcol" data-stage="${stage}">
+      <h3>${stage} <span class="count">${deals.length} · £${fmt(total)}</span></h3>
+      <div class="kbody">${deals.map(d => dealCardHTML(d)).join('')}</div>
+    </div>`;
+  }).join('');
+  /* drag & drop */
+  root.querySelectorAll('.dcard').forEach(card => {
+    card.draggable = true;
+    card.addEventListener('dragstart', e => {
+      card.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', card.dataset.id);
+    });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+    card.addEventListener('click', () => openDealModal(card.dataset.id));
+  });
+  root.querySelectorAll('.kcol').forEach(col => {
+    col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('drop-target'); });
+    col.addEventListener('dragleave', () => col.classList.remove('drop-target'));
+    col.addEventListener('drop', async e => {
+      e.preventDefault();
+      col.classList.remove('drop-target');
+      const id = e.dataTransfer.getData('text/plain');
+      const stage = col.dataset.stage;
+      const d = state.deals.find(x => x.id === id);
+      if (!d || d.stage === stage) return;
+      const prevStage = d.stage;
+      d.stage = stage;
+      d.updatedAt = new Date().toISOString().slice(0,10);
+      await saveDeal(d);
+      if (stage === 'Closed-Won')  Mesh.emit('deal_won',  { id: d.id, value: d.value, title: d.title });
+      if (stage === 'Closed-Lost') Mesh.emit('deal_lost', { id: d.id, value: d.value, title: d.title, prev: prevStage });
+      renderKanban();
+      toast(`Moved → ${stage}`);
+    });
+  });
+}
+function dealCardHTML(d) {
+  const c = state.contacts.find(x => x.id === d.contactId);
+  return `<div class="dcard" data-id="${d.id}">
+    <h4>${esc(d.title)}</h4>
+    <div class="val">£${fmt(d.value || 0)}</div>
+    <div class="who">${esc(c ? c.name + ' · ' + (c.company||'') : 'unlinked')}</div>
+    ${d.expectedClose ? `<div class="close">close · ${esc(d.expectedClose)}</div>` : ''}
+  </div>`;
+}
+function renderDealList() {
+  const tbody = document.getElementById('dealRows');
+  const q = ui.searchD.toLowerCase().trim();
+  const rows = state.deals.filter(d => !q || JSON.stringify(d).toLowerCase().includes(q));
+  rows.sort((a,b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+  tbody.innerHTML = rows.map(d => {
+    const c = state.contacts.find(x => x.id === d.contactId);
+    return `<tr data-id="${d.id}">
+      <td><strong>${esc(d.title)}</strong></td>
+      <td>${esc(c ? c.name + ' · ' + (c.company||'') : '—')}</td>
+      <td><span class="stagebadge" data-stage="${d.stage}">${d.stage}</span></td>
+      <td style="font-family:'DM Mono';color:var(--gold)">£${fmt(d.value||0)}</td>
+      <td style="font-family:'DM Mono';font-size:11.5px;color:var(--cream)">${esc(d.expectedClose || '—')}</td>
+      <td style="font-family:'DM Mono';font-size:11px;color:var(--muted)">${esc(d.updatedAt || '—')}</td>
+    </tr>`;
+  }).join('');
+  tbody.querySelectorAll('tr').forEach(tr => tr.addEventListener('click', () => openDealModal(tr.dataset.id)));
+}
+
+/* ---------- ANALYTICS ---------- */
+function renderAnalytics() {
+  const open = state.deals.filter(d => d.stage !== 'Closed-Won' && d.stage !== 'Closed-Lost');
+  const won  = state.deals.filter(d => d.stage === 'Closed-Won');
+  const lost = state.deals.filter(d => d.stage === 'Closed-Lost');
+  const pipelineVal = open.reduce((s,d) => s + (Number(d.value)||0), 0);
+  const weighted = open.reduce((s,d) => s + (Number(d.value)||0) * (STAGE_PROB[d.stage]||0), 0);
+  const wonVal = won.reduce((s,d) => s + (Number(d.value)||0), 0);
+  const winRate = (won.length + lost.length) > 0 ? Math.round(won.length / (won.length + lost.length) * 100) : 0;
+  /* velocity = avg days from oldest activity to close for won deals (rough proxy: days from updatedAt - 30) */
+  /* expected this month: weighted value of deals closing within current calendar month */
+  const now = new Date();
+  const monthEnd = new Date(now.getFullYear(), now.getMonth()+1, 0);
+  const expectedMonth = open.reduce((s,d) => {
+    if (!d.expectedClose) return s;
+    const ec = new Date(d.expectedClose);
+    if (ec <= monthEnd) return s + (Number(d.value)||0) * (STAGE_PROB[d.stage]||0);
+    return s;
+  }, 0);
+
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric"><div class="label">Open pipeline</div><div class="val">£${fmt(pipelineVal)}</div><div class="sub">${open.length} open deal${open.length===1?'':'s'}</div></div>
+    <div class="metric"><div class="label">Weighted forecast</div><div class="val">£${fmt(Math.round(weighted))}</div><div class="sub">stage-weighted · all open</div></div>
+    <div class="metric"><div class="label">Expected this month</div><div class="val">£${fmt(Math.round(expectedMonth))}</div><div class="sub">closing ≤ ${monthEnd.toISOString().slice(0,10)}</div></div>
+    <div class="metric"><div class="label">Closed-won (lifetime)</div><div class="val">£${fmt(wonVal)}</div><div class="sub">${won.length} won · ${lost.length} lost</div></div>
+    <div class="metric"><div class="label">Win rate</div><div class="val">${winRate}%</div><div class="sub">of resolved deals</div></div>
+    <div class="metric"><div class="label">Contacts</div><div class="val">${state.contacts.length}</div><div class="sub">${uniqueTags().length} tag${uniqueTags().length===1?'':'s'}</div></div>
+  `;
+
+  const maxCount = Math.max(1, ...STAGES.map(s => state.deals.filter(d => d.stage === s).length));
+  document.getElementById('funnelRows').innerHTML = STAGES.map(s => {
+    const deals = state.deals.filter(d => d.stage === s);
+    const count = deals.length;
+    const val = deals.reduce((a,d) => a + (Number(d.value)||0), 0);
+    const pct = Math.round(count / maxCount * 100);
+    return `<div class="frow">
+      <div>${s}</div>
+      <div class="fbar"><div class="fill" data-stage="${s}" style="width:${pct}%"></div></div>
+      <div class="fcount">${count}</div>
+      <div class="fval">£${fmt(val)}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- EMAIL HELPER ---------- */
+const TEMPLATES = {
+  intro: (ctx) => ({
+    subject: `Quick question · ${ctx.company || 'your team'}`,
+    body: `Hi ${ctx.name || 'there'},
+
+${ctx.context ? ctx.context + '. ' : ''}I'm reaching out because I think there may be a fit between what you're building at ${ctx.company || '[company]'} and what we do.
+
+Worth a 15-minute call next week to see if it's worth either of our time?
+
+Best,
+[your name]`
+  }),
+  followup: (ctx) => ({
+    subject: `Following up · ${ctx.company || 'our chat'}`,
+    body: `Hi ${ctx.name || 'there'},
+
+Thanks for the time on the demo. ${ctx.context ? 'Quick note on what you raised — ' + ctx.context + '. ' : ''}A few next steps from my side:
+
+· I'll send over the proposal by [date]
+· Happy to loop in [stakeholder] when useful
+· If timing is wrong now, I'll circle back in Q[?]
+
+Anything else you need from me to move this forward?
+
+Best,
+[your name]`
+  }),
+  proposal: (ctx) => ({
+    subject: `Proposal · ${ctx.company || '[company]'} · ${new Date().toISOString().slice(0,10)}`,
+    body: `Hi ${ctx.name || 'there'},
+
+Proposal attached for ${ctx.company || '[company]'}.${ctx.context ? ' Built around what you mentioned: ' + ctx.context + '.' : ''}
+
+Highlights:
+· [headline scope]
+· [headline outcome]
+· [headline price]
+
+Happy to walk through it live this week — let me know what works.
+
+Best,
+[your name]`
+  }),
+  'loss-reason': (ctx) => ({
+    subject: `One last ask · ${ctx.company || ''}`,
+    body: `Hi ${ctx.name || 'there'},
+
+Understood on going a different direction. No hard feelings.
+
+One ask if you have 30 seconds — what was the deciding factor? Honest answer helps me know if this was a fit issue, a pricing issue, a timing issue, or something we missed on the pitch.
+
+Either way, I appreciated the conversation and hope to cross paths again.
+
+Best,
+[your name]`
+  }),
+};
+
+function renderEmail() {
+  const sel = document.getElementById('eDeal');
+  sel.innerHTML = '<option value="">— none —</option>' + state.deals.map(d => `<option value="${d.id}">${esc(d.title)}</option>`).join('');
+}
+document.getElementById('eDeal').addEventListener('change', e => {
+  const d = state.deals.find(x => x.id === e.target.value);
+  if (!d) return;
+  const c = state.contacts.find(x => x.id === d.contactId);
+  if (c) {
+    document.getElementById('eName').value = c.name || '';
+    document.getElementById('eCompany').value = c.company || '';
+  }
+  document.getElementById('eContext').value = d.notes ? d.notes.slice(0, 100) : '';
+});
+document.getElementById('eGenerate').addEventListener('click', () => {
+  const t = document.getElementById('eTemplate').value;
+  const ctx = {
+    name: document.getElementById('eName').value.trim().split(' ')[0],
+    company: document.getElementById('eCompany').value.trim(),
+    context: document.getElementById('eContext').value.trim(),
+  };
+  const out = TEMPLATES[t](ctx);
+  document.getElementById('eSubject').value = out.subject;
+  document.getElementById('eBody').value = out.body;
+});
+document.getElementById('eCopy').addEventListener('click', async () => {
+  const subject = document.getElementById('eSubject').value;
+  const body = document.getElementById('eBody').value;
+  if (!body) { toast('Generate a draft first'); return; }
+  try {
+    await navigator.clipboard.writeText(`Subject: ${subject}\n\n${body}`);
+    toast('Copied to clipboard');
+  } catch(e) { toast('Copy failed · select manually'); }
+});
+document.getElementById('eMailto').addEventListener('click', () => {
+  const subject = encodeURIComponent(document.getElementById('eSubject').value);
+  const body = encodeURIComponent(document.getElementById('eBody').value);
+  window.open(`mailto:?subject=${subject}&body=${body}`);
+});
+
+/* ---------- SETTINGS ---------- */
+function renderSettings() {
+  /* savings */
+  const lic = Konomi.status();
+  const anchor = state.settings.anchorDate ? new Date(state.settings.anchorDate) : null;
+  const fallback = state.contacts.reduce((d, c) => {
+    if (!c.lastContact) return d;
+    const t = new Date(c.lastContact);
+    return (!d || t < d) ? t : d;
+  }, null);
+  const start = anchor || fallback || new Date();
+  const months = Math.max(0, ((new Date() - start) / (1000*60*60*24*30)));
+  const saved = Math.round(months * REPLACE_RATE);
+  document.getElementById('savings').textContent = '$' + fmt(saved);
+  document.getElementById('savingsSub').textContent = `since ${start.toISOString().slice(0,10)} · vs HubSpot Pro single seat ($${REPLACE_RATE}/mo)`;
+  document.getElementById('anchorDate').value = state.settings.anchorDate || '';
+
+  document.getElementById('qContacts').textContent = state.contacts.length;
+  document.getElementById('qDeals').textContent = state.deals.length;
+  const caps = lic.tier === 'sovereign' ? FREE_CAPS : { contacts: '∞', deals: '∞' };
+  document.getElementById('qContactsMax').textContent = caps.contacts;
+  document.getElementById('qDealsMax').textContent = caps.deals;
+  document.getElementById('kStatus').textContent = lic.message;
+  document.getElementById('meshToggle').checked = state.settings.meshEnabled !== false;
+}
+document.getElementById('anchorDate').addEventListener('change', async e => {
+  state.settings.anchorDate = e.target.value;
+  await saveSettings();
+  renderSettings();
+});
+document.getElementById('meshToggle').addEventListener('change', async e => {
+  state.settings.meshEnabled = e.target.checked;
+  Mesh.setEnabled(e.target.checked);
+  await saveSettings();
+});
+document.getElementById('kActivate').addEventListener('click', () => {
+  const k = document.getElementById('kLicence').value.trim();
+  const r = Konomi.activate(k);
+  if (!r.ok) { toast(r.message); return; }
+  toast(`Licence activated · tier ${r.tier}`);
+  document.getElementById('kLicence').value = '';
+  updateQuotaDisplay();
+  renderSettings();
+});
+document.getElementById('kClear').addEventListener('click', () => {
+  Konomi.clear();
+  toast('Licence cleared · sovereign tier');
+  updateQuotaDisplay();
+  renderSettings();
+});
+
+function updateQuotaDisplay() {
+  const lic = Konomi.status();
+  const wm = document.getElementById('watermark');
+  if (lic.tier === 'sovereign') wm.classList.remove('paid'); else wm.classList.add('paid');
+}
+
+/* ---------- CONTACT MODAL ---------- */
+function openContactModal(id) {
+  const lic = Konomi.status();
+  if (!id && lic.tier === 'sovereign' && state.contacts.length >= FREE_CAPS.contacts) {
+    toast(`Free cap reached · ${FREE_CAPS.contacts} contacts. Upgrade in Settings.`);
+    return;
+  }
+  ui.editingContact = id || null;
+  const c = id ? state.contacts.find(x => x.id === id) : null;
+  document.getElementById('cModalTitle').textContent = c ? 'Edit contact' : 'New contact';
+  document.getElementById('cmName').value = c ? c.name : '';
+  document.getElementById('cmCompany').value = c ? c.company || '' : '';
+  document.getElementById('cmRole').value = c ? c.role || '' : '';
+  document.getElementById('cmEmail').value = c ? c.email || '' : '';
+  document.getElementById('cmPhone').value = c ? c.phone || '' : '';
+  document.getElementById('cmLinkedIn').value = c ? c.linkedin || '' : '';
+  document.getElementById('cmTags').value = c ? (c.tags || []).join(', ') : '';
+  document.getElementById('cmLastContact').value = c ? c.lastContact || '' : new Date().toISOString().slice(0,10);
+  document.getElementById('cmNotes').value = c ? c.notes || '' : '';
+  document.getElementById('cmDelete').style.display = c ? '' : 'none';
+  document.getElementById('cmActivityLog').style.display = c ? '' : 'none';
+  if (c) renderContactActivities(c.id);
+  document.getElementById('contactModal').classList.add('open');
+}
+function renderContactActivities(contactId) {
+  const acts = state.activities.filter(a => a.contactId === contactId).sort((a,b) => (b.at||'').localeCompare(a.at||''));
+  document.getElementById('cmActivities').innerHTML = acts.length === 0
+    ? `<div style="color:var(--muted);font-family:'DM Mono';font-size:11.5px;padding:6px 0">No activity yet.</div>`
+    : acts.map(a => `<div class="activity-item">
+        <span class="kind">${a.kind}</span> ${esc(a.note)}
+        <div class="ts">${esc(a.at)}</div>
+      </div>`).join('');
+}
+document.getElementById('cmActAdd').addEventListener('click', async () => {
+  if (!ui.editingContact) return;
+  const note = document.getElementById('cmActNote').value.trim();
+  if (!note) return;
+  const a = {
+    id: uid(),
+    contactId: ui.editingContact,
+    kind: document.getElementById('cmActKind').value,
+    note,
+    at: new Date().toISOString().slice(0,10),
+  };
+  await saveActivity(a);
+  state.activities.push(a);
+  document.getElementById('cmActNote').value = '';
+  /* bump lastContact */
+  const c = state.contacts.find(x => x.id === ui.editingContact);
+  if (c) { c.lastContact = a.at; await saveContact(c); }
+  renderContactActivities(ui.editingContact);
+});
+document.getElementById('cmCancel').addEventListener('click', () => document.getElementById('contactModal').classList.remove('open'));
+document.getElementById('cmSave').addEventListener('click', async () => {
+  const name = document.getElementById('cmName').value.trim();
+  if (!name) { toast('Name required'); return; }
+  const obj = {
+    id: ui.editingContact || uid(),
+    name,
+    company: document.getElementById('cmCompany').value.trim(),
+    role: document.getElementById('cmRole').value.trim(),
+    email: document.getElementById('cmEmail').value.trim(),
+    phone: document.getElementById('cmPhone').value.trim(),
+    linkedin: document.getElementById('cmLinkedIn').value.trim(),
+    tags: document.getElementById('cmTags').value.split(',').map(s => s.trim()).filter(Boolean),
+    lastContact: document.getElementById('cmLastContact').value,
+    notes: document.getElementById('cmNotes').value.trim(),
+  };
+  const isNew = !ui.editingContact;
+  await saveContact(obj);
+  if (isNew) state.contacts.push(obj);
+  else state.contacts = state.contacts.map(c => c.id === obj.id ? obj : c);
+  if (isNew) Mesh.emit('contact_added', { id: obj.id, name: obj.name, company: obj.company });
+  document.getElementById('contactModal').classList.remove('open');
+  renderContacts();
+  toast(isNew ? 'Contact added' : 'Contact saved');
+});
+document.getElementById('cmDelete').addEventListener('click', async () => {
+  if (!ui.editingContact) return;
+  if (!confirm('Delete this contact? Activities will be removed too.')) return;
+  await DB.del('contacts', ui.editingContact);
+  for (const a of state.activities.filter(a => a.contactId === ui.editingContact)) await DB.del('activities', a.id);
+  state.contacts = state.contacts.filter(c => c.id !== ui.editingContact);
+  state.activities = state.activities.filter(a => a.contactId !== ui.editingContact);
+  document.getElementById('contactModal').classList.remove('open');
+  renderContacts();
+  toast('Contact deleted');
+});
+document.getElementById('addContactBtn').addEventListener('click', () => openContactModal());
+
+/* ---------- DEAL MODAL ---------- */
+function openDealModal(id) {
+  const lic = Konomi.status();
+  if (!id && lic.tier === 'sovereign' && state.deals.length >= FREE_CAPS.deals) {
+    toast(`Free cap reached · ${FREE_CAPS.deals} deals. Upgrade in Settings.`);
+    return;
+  }
+  ui.editingDeal = id || null;
+  const d = id ? state.deals.find(x => x.id === id) : null;
+  document.getElementById('dModalTitle').textContent = d ? 'Edit deal' : 'New deal';
+  document.getElementById('dmTitle').value = d ? d.title : '';
+  const sel = document.getElementById('dmContact');
+  sel.innerHTML = '<option value="">— none —</option>' + state.contacts.map(c => `<option value="${c.id}" ${d && d.contactId===c.id?'selected':''}>${esc(c.name)} · ${esc(c.company||'')}</option>`).join('');
+  document.getElementById('dmStage').value = d ? d.stage : 'Lead';
+  document.getElementById('dmValue').value = d ? d.value || '' : '';
+  document.getElementById('dmClose').value = d ? d.expectedClose || '' : '';
+  document.getElementById('dmNotes').value = d ? d.notes || '' : '';
+  document.getElementById('dmDelete').style.display = d ? '' : 'none';
+  document.getElementById('dealModal').classList.add('open');
+}
+document.getElementById('dmCancel').addEventListener('click', () => document.getElementById('dealModal').classList.remove('open'));
+document.getElementById('dmSave').addEventListener('click', async () => {
+  const title = document.getElementById('dmTitle').value.trim();
+  if (!title) { toast('Title required'); return; }
+  const prevStage = ui.editingDeal ? (state.deals.find(x => x.id === ui.editingDeal) || {}).stage : null;
+  const obj = {
+    id: ui.editingDeal || uid(),
+    title,
+    contactId: document.getElementById('dmContact').value,
+    stage: document.getElementById('dmStage').value,
+    value: Number(document.getElementById('dmValue').value) || 0,
+    expectedClose: document.getElementById('dmClose').value,
+    notes: document.getElementById('dmNotes').value.trim(),
+    updatedAt: new Date().toISOString().slice(0,10),
+  };
+  const isNew = !ui.editingDeal;
+  await saveDeal(obj);
+  if (isNew) state.deals.push(obj);
+  else state.deals = state.deals.map(d => d.id === obj.id ? obj : d);
+  if (obj.stage === 'Closed-Won' && prevStage !== 'Closed-Won')   Mesh.emit('deal_won',  { id: obj.id, value: obj.value, title: obj.title });
+  if (obj.stage === 'Closed-Lost' && prevStage !== 'Closed-Lost') Mesh.emit('deal_lost', { id: obj.id, value: obj.value, title: obj.title, prev: prevStage });
+  document.getElementById('dealModal').classList.remove('open');
+  renderPipeline();
+  toast(isNew ? 'Deal added' : 'Deal saved');
+});
+document.getElementById('dmDelete').addEventListener('click', async () => {
+  if (!ui.editingDeal) return;
+  if (!confirm('Delete this deal?')) return;
+  await DB.del('deals', ui.editingDeal);
+  state.deals = state.deals.filter(d => d.id !== ui.editingDeal);
+  document.getElementById('dealModal').classList.remove('open');
+  renderPipeline();
+  toast('Deal deleted');
+});
+document.getElementById('addDealBtn').addEventListener('click', () => openDealModal());
+
+/* ---------- TOOLBAR WIRING ---------- */
+document.getElementById('cSearch').addEventListener('input', e => { ui.searchC = e.target.value; renderContacts(); });
+document.getElementById('cTagFilter').addEventListener('change', e => { ui.tagFilter = e.target.value; renderContacts(); });
+document.getElementById('dSearch').addEventListener('input', e => { ui.searchD = e.target.value; renderPipeline(); });
+document.querySelectorAll('.view-toggle button[data-pview]').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.view-toggle button[data-pview]').forEach(x => x.classList.toggle('active', x === b));
+    ui.pview = b.dataset.pview;
+    renderPipeline();
+  });
+});
+
+/* ---------- IMPORT / EXPORT ---------- */
+document.getElementById('importBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+document.getElementById('importAllBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+document.getElementById('fileInput').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  e.target.value = '';
+  if (file.name.toLowerCase().endsWith('.json')) await importJSON(text);
+  else if (file.name.toLowerCase().endsWith('.vcf')) await importVCard(text);
+  else await importCSV(text);
+});
+async function importCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { toast('CSV looks empty'); return; }
+  const headers = parseCSVRow(lines[0]).map(h => h.toLowerCase().trim());
+  const idx = (names) => { for (const n of names) { const i = headers.indexOf(n); if (i >= 0) return i; } return -1; };
+  const ni = idx(['name','full name','contact','first name']);
+  const ei = idx(['email','e-mail']);
+  const ci = idx(['company','organization','organisation']);
+  const pi = idx(['phone','mobile','telephone']);
+  const ri = idx(['role','title','position','job title']);
+  const ti = idx(['tags']);
+  let added = 0;
+  for (let i = 1; i < lines.length; i++) {
+    const row = parseCSVRow(lines[i]);
+    const name = ni >= 0 ? row[ni] : row[0];
+    if (!name || !name.trim()) continue;
+    const lic = Konomi.status();
+    if (lic.tier === 'sovereign' && state.contacts.length >= FREE_CAPS.contacts) { toast(`Hit free cap at ${FREE_CAPS.contacts}`); break; }
+    const c = {
+      id: uid(),
+      name: name.trim(),
+      email: ei >= 0 ? (row[ei]||'').trim() : '',
+      company: ci >= 0 ? (row[ci]||'').trim() : '',
+      phone: pi >= 0 ? (row[pi]||'').trim() : '',
+      role: ri >= 0 ? (row[ri]||'').trim() : '',
+      tags: ti >= 0 ? (row[ti]||'').split(/[;|]/).map(s => s.trim()).filter(Boolean) : [],
+      linkedin: '', notes: '', lastContact: new Date().toISOString().slice(0,10),
+    };
+    await saveContact(c);
+    state.contacts.push(c);
+    added++;
+  }
+  toast(`Imported ${added} contact${added===1?'':'s'}`);
+  renderContacts();
+}
+function parseCSVRow(line) {
+  const out = []; let cur = ''; let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQ) {
+      if (ch === '"' && line[i+1] === '"') { cur += '"'; i++; }
+      else if (ch === '"') inQ = false;
+      else cur += ch;
+    } else {
+      if (ch === ',') { out.push(cur); cur = ''; }
+      else if (ch === '"') inQ = true;
+      else cur += ch;
+    }
+  }
+  out.push(cur);
+  return out;
+}
+async function importVCard(text) {
+  const cards = text.split(/BEGIN:VCARD/i).slice(1);
+  let added = 0;
+  for (const raw of cards) {
+    const card = 'BEGIN:VCARD' + raw;
+    const get = (k) => { const m = card.match(new RegExp('^' + k + '[^:]*:(.*)$','im')); return m ? m[1].trim() : ''; };
+    const fn = get('FN') || get('N').split(';').filter(Boolean).reverse().join(' ');
+    if (!fn) continue;
+    const lic = Konomi.status();
+    if (lic.tier === 'sovereign' && state.contacts.length >= FREE_CAPS.contacts) { toast(`Hit free cap at ${FREE_CAPS.contacts}`); break; }
+    const c = {
+      id: uid(), name: fn, email: get('EMAIL'), phone: get('TEL'),
+      company: get('ORG').split(';')[0] || '', role: get('TITLE'),
+      linkedin: '', tags: [], notes: '', lastContact: new Date().toISOString().slice(0,10),
+    };
+    await saveContact(c);
+    state.contacts.push(c);
+    added++;
+  }
+  toast(`Imported ${added} contact${added===1?'':'s'} from vCard`);
+  renderContacts();
+}
+async function importJSON(text) {
+  try {
+    const obj = JSON.parse(text);
+    if (obj.contacts) for (const c of obj.contacts) { await saveContact(c); }
+    if (obj.deals) for (const d of obj.deals) { await saveDeal(d); }
+    if (obj.activities) for (const a of obj.activities) { await saveActivity(a); }
+    if (obj.settings) { state.settings = Object.assign(state.settings, obj.settings); await saveSettings(); }
+    await loadAll();
+    toast('Imported JSON');
+    renderContacts();
+  } catch(e) { toast('Bad JSON file'); }
+}
+
+document.getElementById('exportContactsBtn').addEventListener('click', () => downloadFile('fallcrm-contacts.csv', toCSV(state.contacts), 'text/csv'));
+document.getElementById('exportDealsBtn').addEventListener('click', () => {
+  const grouped = STAGES.map(s => {
+    const ds = state.deals.filter(d => d.stage === s);
+    return `\n# ${s}\n` + toCSV(ds);
+  }).join('\n');
+  downloadFile('fallcrm-deals-by-stage.csv', grouped, 'text/csv');
+});
+document.getElementById('exportAllBtn').addEventListener('click', () => {
+  const blob = { version: 1, exportedAt: new Date().toISOString(), contacts: state.contacts, deals: state.deals, activities: state.activities, settings: state.settings };
+  downloadFile('fallcrm-export.json', JSON.stringify(blob, null, 2), 'application/json');
+});
+function toCSV(rows) {
+  if (rows.length === 0) return '';
+  const keys = [...new Set(rows.flatMap(r => Object.keys(r)))];
+  const esc = (v) => { if (v == null) return ''; const s = Array.isArray(v) ? v.join(';') : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; };
+  return keys.join(',') + '\n' + rows.map(r => keys.map(k => esc(r[k])).join(',')).join('\n');
+}
+function downloadFile(name, content, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+document.getElementById('wipeBtn').addEventListener('click', async () => {
+  if (!confirm('Wipe ALL fallcrm data on this device? This cannot be undone.')) return;
+  await DB.clearAll();
+  state = { contacts: [], deals: [], activities: [], settings: { id:'main', anchorDate:null, meshEnabled:true } };
+  toast('All data wiped');
+  renderContacts();
+});
+
+/* ---------- UTIL ---------- */
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmt(n) { return Number(n||0).toLocaleString('en-GB'); }
+let toastT = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+/* ---------- BOOT ---------- */
+(async () => {
+  await loadAll();
+  Mesh.setEnabled(state.settings.meshEnabled !== false);
+  updateQuotaDisplay();
+  renderContacts();
+  /* close modal on backdrop click */
+  document.querySelectorAll('.modal-backdrop').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+  });
+})();
+
+/* register PWA SW shim — none, manifest only */
+</script>
+
+</body>
+</html>
